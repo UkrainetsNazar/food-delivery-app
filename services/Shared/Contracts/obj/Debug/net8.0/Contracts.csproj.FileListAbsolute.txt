@@ -1,0 +1,12 @@
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/bin/Debug/net8.0/Contracts.deps.json
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/bin/Debug/net8.0/Contracts.dll
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/bin/Debug/net8.0/Contracts.pdb
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.GeneratedMSBuildEditorConfig.editorconfig
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.AssemblyInfoInputs.cache
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.AssemblyInfo.cs
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.csproj.CoreCompileInputs.cache
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.sourcelink.json
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.dll
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/refint/Contracts.dll
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/Contracts.pdb
+/Users/nazar/Desktop/Code/PetProj/FoodDeliveryApp/services/Shared/Contracts/obj/Debug/net8.0/ref/Contracts.dll

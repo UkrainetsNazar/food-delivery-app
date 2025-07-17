@@ -1,11 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
+using Contracts.Events;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
-public class AuthService(AuthDbContext context, JwtService jwtService)
+public class AuthService(AuthDbContext context, JwtService jwtService, IPublishEndpoint publishEndpoint)
 {
     private readonly AuthDbContext _context = context;
     private readonly JwtService _jwtService = jwtService;
+    private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
 
     public async Task<(string AccessToken, string RefreshToken)?> LoginAsync(string email, string password)
     {
@@ -61,7 +64,7 @@ public class AuthService(AuthDbContext context, JwtService jwtService)
         return true;
     }
 
-    public async Task<(string AccessToken, string RefreshToken)?> RegisterAsync(string email, string password)
+    public async Task<(string, string)?> RegisterAsync(string email, string password, string firstName, string lastName)
     {
         if (await _context.AppUsers.AnyAsync(u => u.Email == email))
             return null;
@@ -78,12 +81,21 @@ public class AuthService(AuthDbContext context, JwtService jwtService)
 
         var refreshToken = GenerateRefreshToken();
         user.RefreshTokens.Add(refreshToken);
+
         _context.AppUsers.Add(user);
         await _context.SaveChangesAsync();
+
+        await _publishEndpoint.Publish(new UserRegisteredEvent
+        {
+            Id = user.Id,
+            FirstName = firstName,
+            LastName = lastName
+        });
 
         var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
         return (accessToken, refreshToken.Token);
     }
+
 
     private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
     {
