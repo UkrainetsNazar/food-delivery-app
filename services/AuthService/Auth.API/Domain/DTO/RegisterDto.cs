@@ -10,4 +10,6 @@ public class RegisterDto
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$",
         ErrorMessage = "Password must contain at least one uppercase letter, one lowercase letter, and one number")]
     public string? Password { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
 }

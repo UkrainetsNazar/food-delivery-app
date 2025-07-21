@@ -16,6 +16,8 @@ public class UserRegisteredConsumer(IUserService userService) : IConsumer<UserRe
             LastName = message.LastName
         };
 
+        System.Console.WriteLine(dto.Id.ToString(), dto.FirstName, dto.LastName);
+
         await _userService.CreateProfileAsync(dto);
     }
 }

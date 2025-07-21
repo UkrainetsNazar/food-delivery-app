@@ -1,0 +1,20 @@
+services:
+  user-api:
+    build:
+      context: .
+      dockerfile: UserService/Dockerfile
+    ports:
+      - "5001:80"
+
+  auth-api:
+    build:
+      context: .
+      dockerfile: AuthService/Dockerfile
+    ports:
+      - "5002:80"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"

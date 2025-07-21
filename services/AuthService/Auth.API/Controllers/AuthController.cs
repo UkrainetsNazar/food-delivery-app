@@ -12,12 +12,12 @@ public class AuthController(AuthService authService, AdminService adminService) 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)
     {
-        var result = await _authService.RegisterAsync(request.Email!, request.Password!);
+        var result = await _authService.RegisterAsync(request.Email!, request.Password!, request.FirstName!, request.LastName!);
         if (result == null)
             return BadRequest(new { message = "User already exists" });
 
-        SetRefreshTokenCookie(result.Value.RefreshToken);
-        return Ok(new { accessToken = result.Value.AccessToken });
+        SetRefreshTokenCookie(result.RefreshToken);
+        return Ok(new { accessToken = result.AccessToken });
     }
 
     [HttpPost("login")]

@@ -3,9 +3,21 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var useInMemory = builder.Configuration.GetValue<bool>("InMemory");
+
+if (useInMemory)
+{
+    builder.Services.AddDbContext<UserDbContext>(options =>
+        options.UseInMemoryDatabase("AuthDb"));
+}
+else
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<UserDbContext>(options =>
+        options.UseNpgsql(connectionString));
+}
+
 builder.Services.AddControllers();
-builder.Services.AddDbContext<UserDbContext>(options =>
-    options.UseInMemoryDatabase("UserDb"));
 
 builder.Services.AddMassTransit(x =>
     {

@@ -64,7 +64,7 @@ public class AuthService(AuthDbContext context, JwtService jwtService, IPublishE
         return true;
     }
 
-    public async Task<(string, string)?> RegisterAsync(string email, string password, string firstName, string lastName)
+    public async Task<AuthResultDto?> RegisterAsync(string email, string password, string firstName, string lastName)
     {
         if (await _context.AppUsers.AnyAsync(u => u.Email == email))
             return null;
@@ -93,7 +93,7 @@ public class AuthService(AuthDbContext context, JwtService jwtService, IPublishE
         });
 
         var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
-        return (accessToken, refreshToken.Token);
+        return new AuthResultDto { AccessToken = accessToken, RefreshToken = refreshToken.Token};
     }
 
 
