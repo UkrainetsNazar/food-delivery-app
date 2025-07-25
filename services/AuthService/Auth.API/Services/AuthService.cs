@@ -1,14 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
-using Contracts.Events;
-using MassTransit;
+using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
+using UserService;
 
-public class AuthService(AuthDbContext context, JwtService jwtService, IPublishEndpoint publishEndpoint)
+public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.UserGrpcClient userClient)
 {
     private readonly AuthDbContext _context = context;
     private readonly JwtService _jwtService = jwtService;
-    private readonly IPublishEndpoint _publishEndpoint = publishEndpoint;
+    private readonly UserGrpc.UserGrpcClient _userClient = userClient;
 
     public async Task<(string AccessToken, string RefreshToken)?> LoginAsync(string email, string password)
     {
@@ -64,16 +64,16 @@ public class AuthService(AuthDbContext context, JwtService jwtService, IPublishE
         return true;
     }
 
-    public async Task<AuthResultDto?> RegisterAsync(string email, string password, string firstName, string lastName)
+    public async Task<AuthResultDto?> RegisterAsync(RegisterDto registerDto)
     {
-        if (await _context.AppUsers.AnyAsync(u => u.Email == email))
+        if (await _context.AppUsers.AnyAsync(u => u.Email == registerDto.Email))
             return null;
 
-        CreatePasswordHash(password, out byte[] hash, out byte[] salt);
+        CreatePasswordHash(registerDto.Password!, out byte[] hash, out byte[] salt);
 
         var user = new AppUser
         {
-            Email = email,
+            Email = registerDto.Email!,
             PasswordHash = hash,
             PasswordSalt = salt,
             RefreshTokens = new List<RefreshToken>()
@@ -85,17 +85,28 @@ public class AuthService(AuthDbContext context, JwtService jwtService, IPublishE
         _context.AppUsers.Add(user);
         await _context.SaveChangesAsync();
 
-        await _publishEndpoint.Publish(new UserRegisteredEvent
+        var grpcRequest = new CreateUserRequest
         {
-            Id = user.Id,
-            FirstName = firstName,
-            LastName = lastName
-        });
+            UserId = user.Id.ToString(),
+            FirstName = registerDto.FirstName,
+            LastName = registerDto.LastName
+        };
+
+        try
+        {
+            var grpcResponse = await _userClient.CreateUserAsync(grpcRequest);
+            if (!grpcResponse.Success)
+                Console.WriteLine("UserService failed to create user");
+        }
+        catch (RpcException ex)
+        {
+            Console.WriteLine($"gRPC error while creating user profile: {ex.Status.Detail}");
+        }
+
 
         var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
-        return new AuthResultDto { AccessToken = accessToken, RefreshToken = refreshToken.Token};
+        return new AuthResultDto { AccessToken = accessToken, RefreshToken = refreshToken.Token };
     }
-
 
     private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
     {

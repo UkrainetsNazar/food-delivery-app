@@ -2,6 +2,7 @@ using System.Text;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using UserService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,18 +20,10 @@ else
         options.UseNpgsql(connectionString));
 }
 
-builder.Services.AddMassTransit(x =>
+builder.Services.AddGrpcClient<UserGrpc.UserGrpcClient>(o =>
 {
-    x.UsingRabbitMq((context, cfg) =>
-    {
-        cfg.Host("rabbitmq", "/", h =>
-        {
-            h.Username("guest");
-            h.Password("guest");
-        });
-    });
+    o.Address = new Uri("http://localhost:5001");
 });
-
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
@@ -94,11 +87,8 @@ builder.Services.AddAuthorizationBuilder()
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseAuthentication();
 app.UseAuthorization();
