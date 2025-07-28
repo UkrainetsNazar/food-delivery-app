@@ -12,7 +12,7 @@ public class AuthController(AuthService authService, AdminService adminService) 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)
     {
-        var result = await _authService.RegisterAsync(request.Email!, request.Password!, request.FirstName!, request.LastName!);
+        var result = await _authService.RegisterAsync(request);
         if (result == null)
             return BadRequest(new { message = "User already exists" });
 

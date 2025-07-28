@@ -22,7 +22,7 @@ else
 
 builder.Services.AddGrpcClient<UserGrpc.UserGrpcClient>(o =>
 {
-    o.Address = new Uri("http://localhost:5001");
+    o.Address = new Uri("https://localhost:7289");
 });
 
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
