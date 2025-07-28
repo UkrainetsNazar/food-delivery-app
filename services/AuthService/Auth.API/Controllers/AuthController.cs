@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("auth")]
 public class AuthController(AuthService authService, AdminService adminService) : ControllerBase
 {
     private readonly AuthService _authService = authService;
@@ -12,6 +12,10 @@ public class AuthController(AuthService authService, AdminService adminService) 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         var result = await _authService.RegisterAsync(request);
         if (result == null)
             return BadRequest(new { message = "User already exists" });
