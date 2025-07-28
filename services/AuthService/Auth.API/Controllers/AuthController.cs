@@ -79,12 +79,4 @@ public class AuthController(AuthService authService, AdminService adminService) 
 
         return Ok(new { message = "Logged out successfully" });
     }
-
-    [Authorize(Policy = "AdminOnly")]
-    [HttpGet("users")]
-    public async Task<IActionResult> GetAllUsers()
-    {
-        var users = await _adminService.GetAllUsers();
-        return Ok(users);
-    }
 }
