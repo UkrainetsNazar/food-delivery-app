@@ -1,13 +1,13 @@
 using Microsoft.EntityFrameworkCore;
-using RestaurantService.Domain.Entities;
+using Restaurant.API.Domain.Entities;
 
-namespace RestaurantService.Data;
+namespace Restaurant.API.Data;
 
 public class RestaurantDbContext : DbContext
 {
-    public RestaurantDbContext(DbContextOptions<RestaurantDbContext> options) : base(options){  }
+    public RestaurantDbContext(DbContextOptions<RestaurantDbContext> options) : base(options) { }
 
-    public DbSet<Restaurant> Restaurants { get; set; }
+    public DbSet<SupportedRestaurant> Restaurants { get; set; }
     public DbSet<Dish> Dishes { get; set; }
     public DbSet<DishCategory> DishCategories { get; set; }
 
@@ -15,20 +15,27 @@ public class RestaurantDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Restaurant>()
-            .HasMany(r => r.Dishes)
-            .WithOne(d => d.Restaurant)
-            .HasForeignKey(d => d.RestaurantId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RestaurantCategory>()
+            .HasKey(rc => new { rc.RestaurantId, rc.DishCategoryId });
 
-        modelBuilder.Entity<DishCategory>()
-            .HasMany(c => c.Dishes)
-            .WithOne(d => d.DishCategory)
-            .HasForeignKey(d => d.DishCategoryId)
-            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<RestaurantCategory>()
+            .HasOne(rc => rc.Restaurant)
+            .WithMany(r => r.RestaurantCategories)
+            .HasForeignKey(rc => rc.RestaurantId);
 
-        modelBuilder.Entity<Restaurant>()
-            .HasMany(r => r.DishCategories)
-            .WithMany(c => c.Restaurants);
+        modelBuilder.Entity<RestaurantCategory>()
+            .HasOne(rc => rc.DishCategory)
+            .WithMany(dc => dc.RestaurantCategories)
+            .HasForeignKey(rc => rc.DishCategoryId);
+
+        modelBuilder.Entity<Dish>()
+            .HasOne(d => d.Restaurant)
+            .WithMany(r => r.Dishes)
+            .HasForeignKey(d => d.RestaurantId);
+
+        modelBuilder.Entity<Dish>()
+            .HasOne(d => d.DishCategory)
+            .WithMany(dc => dc.Dishes)
+            .HasForeignKey(d => d.DishCategoryId);
     }
 }
