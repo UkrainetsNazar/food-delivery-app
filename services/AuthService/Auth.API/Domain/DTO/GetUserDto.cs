@@ -1,3 +1,7 @@
+using Auth.API.Domain.Entities;
+
+namespace Auth.API.Domain.DTO;
+
 public class GetUserDto
 {
     public Guid Id { get; set; }

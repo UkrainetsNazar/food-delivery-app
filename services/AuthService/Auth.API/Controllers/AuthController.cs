@@ -1,6 +1,10 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Auth.API.Services;
+using Auth.API.Domain.DTO;
+
+namespace Auth.API.Controllers;
 
 [ApiController]
 [Route("auth")]

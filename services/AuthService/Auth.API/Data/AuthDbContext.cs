@@ -1,4 +1,7 @@
+using Auth.API.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
+
+namespace Auth.API.Data;
 
 public class AuthDbContext(DbContextOptions<AuthDbContext> options) : DbContext(options)
 {

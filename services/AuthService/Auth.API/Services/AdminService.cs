@@ -1,4 +1,8 @@
+using Auth.API.Data;
+using Auth.API.Domain.DTO;
 using Microsoft.EntityFrameworkCore;
+
+namespace Auth.API.Services;
 
 public class AdminService(AuthDbContext dbContext)
 {

@@ -1,4 +1,7 @@
 using System.Text;
+using Auth.API.Data;
+using Auth.API.Domain;
+using Auth.API.Services;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;

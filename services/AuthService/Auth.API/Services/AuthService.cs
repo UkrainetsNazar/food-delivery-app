@@ -1,8 +1,14 @@
 using System.Security.Cryptography;
 using System.Text;
+using Auth.API.Data;
+using Auth.API.Domain;
+using Auth.API.Domain.DTO;
+using Auth.API.Domain.Entities;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
 using UserService;
+
+namespace Auth.API.Services;
 
 public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.UserGrpcClient userClient)
 {

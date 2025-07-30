@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 
+namespace Auth.API.Domain.DTO;
+
 public class RegisterDto
 {
     [Required]

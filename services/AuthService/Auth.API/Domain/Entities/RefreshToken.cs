@@ -1,3 +1,5 @@
+namespace Auth.API.Domain.Entities;
+
 public class RefreshToken
 {
     public int Id { get; set; }

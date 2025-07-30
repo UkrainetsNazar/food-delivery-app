@@ -1,3 +1,5 @@
+namespace Auth.API.Domain;
+
 public class JwtOptions
 {
     public string Key { get; set; } = string.Empty;

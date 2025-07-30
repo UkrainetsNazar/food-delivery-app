@@ -1,3 +1,5 @@
+namespace Auth.API.Domain.Entities;
+
 public class AppUser
 {
     public Guid Id { get; set; } = Guid.NewGuid();

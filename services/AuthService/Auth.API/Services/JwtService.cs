@@ -4,6 +4,8 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
+namespace Auth.API.Domain;
+
 public class JwtService(IOptions<JwtOptions> options)
 {
     private readonly JwtOptions _options = options.Value;
