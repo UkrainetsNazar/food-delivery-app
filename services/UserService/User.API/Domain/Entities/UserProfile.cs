@@ -1,3 +1,5 @@
+namespace User.API.Domain.Entities;
+
 public class UserProfile
 {
     public Guid Id { get; set; }

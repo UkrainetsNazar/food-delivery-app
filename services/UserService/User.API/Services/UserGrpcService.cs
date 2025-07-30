@@ -1,6 +1,10 @@
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
+using User.API.Data;
+using User.API.Domain.Entities;
 using UserService;
+
+namespace User.API.Services;
 
 public class UserGrpcService(UserDbContext dbContext) : UserGrpc.UserGrpcBase
 {

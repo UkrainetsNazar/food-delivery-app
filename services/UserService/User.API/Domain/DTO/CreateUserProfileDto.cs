@@ -1,3 +1,5 @@
+namespace User.API.Domain.DTO;
+
 public class CreateUserProfileDto
 {
     public Guid Id { get; set; }
