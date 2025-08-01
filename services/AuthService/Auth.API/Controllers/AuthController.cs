@@ -8,10 +8,9 @@ namespace Auth.API.Controllers;
 
 [ApiController]
 [Route("auth")]
-public class AuthController(AuthService authService, AdminService adminService) : ControllerBase
+public class AuthController(AuthService authService) : ControllerBase
 {
     private readonly AuthService _authService = authService;
-    private readonly AdminService _adminService = adminService;
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterDto request)

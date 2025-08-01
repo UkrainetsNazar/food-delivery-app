@@ -11,6 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Protobuf Include="..\..\Shared\Contracts\Protos\auth.proto" GrpcServices="Both" />
     <Protobuf Include="..\..\Shared\Contracts\Protos\authUser.proto" GrpcServices="Client" />
   </ItemGroup>
 
