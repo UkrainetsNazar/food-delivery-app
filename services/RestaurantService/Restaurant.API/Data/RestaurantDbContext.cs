@@ -3,13 +3,12 @@ using Restaurant.API.Domain.Entities;
 
 namespace Restaurant.API.Data;
 
-public class RestaurantDbContext : DbContext
+public class RestaurantDbContext(DbContextOptions<RestaurantDbContext> options) : DbContext(options)
 {
-    public RestaurantDbContext(DbContextOptions<RestaurantDbContext> options) : base(options) { }
-
     public DbSet<SupportedRestaurant> Restaurants { get; set; }
     public DbSet<Dish> Dishes { get; set; }
     public DbSet<DishCategory> DishCategories { get; set; }
+    public DbSet<RestaurantCategory> RestaurantCategories { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
