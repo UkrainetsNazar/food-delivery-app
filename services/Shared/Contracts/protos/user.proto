@@ -1,0 +1,60 @@
+syntax = "proto3";
+
+option csharp_namespace = "UserService";
+
+import "google/protobuf/empty.proto";
+
+service UserGrpc {
+  rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
+  rpc GetRoleAndStatus (GetRoleAndStatusRequest) returns (GetRoleAndStatusResponse);
+
+  rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse);
+  rpc BlockUser (BlockUserRequest) returns (google.protobuf.Empty);
+  rpc UnblockUser (UnblockUserRequest) returns (google.protobuf.Empty);
+  rpc ChangeUserRole (ChangeUserRoleRequest) returns (google.protobuf.Empty);
+}
+
+message CreateUserRequest {
+  string userId = 1;
+  string firstName = 2;
+  string lastName = 3;
+}
+
+message CreateUserResponse {
+  bool success = 1;
+}
+
+message GetRoleAndStatusRequest {
+  string userId = 1;
+}
+
+message GetRoleAndStatusResponse {
+  string role = 1;
+  bool isBlocked = 2;
+}
+
+message GetUserByIdRequest {
+  string id = 1;
+}
+
+message GetUserByIdResponse {
+  string id = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string email = 4;
+  string role = 5;
+  bool isBlocked = 6;
+}
+
+message BlockUserRequest {
+  string id = 1;
+}
+
+message UnblockUserRequest {
+  string id = 1;
+}
+
+message ChangeUserRoleRequest {
+  string id = 1;
+  string newRole = 2;
+}

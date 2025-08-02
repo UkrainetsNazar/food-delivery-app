@@ -23,6 +23,8 @@ else
         options.UseNpgsql(connectionString));
 }
 
+builder.Services.AddGrpc();
+
 builder.Services.AddGrpcClient<UserGrpc.UserGrpcClient>(o =>
 {
     o.Address = new Uri("https://localhost:7289");
@@ -31,7 +33,6 @@ builder.Services.AddGrpcClient<UserGrpc.UserGrpcClient>(o =>
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("JwtOptions"));
 
 builder.Services.AddScoped<JwtService>();
-builder.Services.AddScoped<AdminService>();
 builder.Services.AddScoped<AuthService>();
 
 builder.Services.AddControllers();

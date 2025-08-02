@@ -19,13 +19,18 @@ public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.
     public async Task<(string AccessToken, string RefreshToken)?> LoginAsync(string email, string password)
     {
         var user = await _context.AppUsers.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null)
+        if (user == null || !VerifyPassword(password, user.PasswordHash!, user.PasswordSalt!))
             return null;
 
-        if (!VerifyPassword(password, user.PasswordHash!, user.PasswordSalt!))
+        var grpcResponse = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
+        {
+            UserId = user.Id.ToString()
+        });
+
+        if (grpcResponse.IsBlocked)
             return null;
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
+        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, grpcResponse.Role);
         var refreshToken = GenerateRefreshToken();
 
         user.RefreshTokens.Add(refreshToken);
@@ -45,13 +50,21 @@ public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.
 
         var user = refreshToken.AppUser;
 
+        var response = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
+        {
+            UserId = user.Id.ToString()
+        });
+
+        if (response.IsBlocked)
+            return null;
+
         user.RefreshTokens.Where(t => t.IsActive).ToList().ForEach(t => t.Revoked = DateTime.UtcNow);
 
         var newRefreshToken = GenerateRefreshToken();
         refreshToken.Revoked = DateTime.UtcNow;
         user.RefreshTokens.Add(newRefreshToken);
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
+        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, response.Role);
         await _context.SaveChangesAsync();
 
         return (accessToken, newRefreshToken.Token);
@@ -109,10 +122,15 @@ public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.
             Console.WriteLine($"gRPC error while creating user profile: {ex.Status.Detail}");
         }
 
+        var roleResponse = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
+        {
+            UserId = user.Id.ToString()
+        });
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, user.Role);
+        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, roleResponse.Role);
         return new AuthResultDto { AccessToken = accessToken, RefreshToken = refreshToken.Token };
     }
+
 
     private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
     {

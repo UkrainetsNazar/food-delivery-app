@@ -1,3 +1,6 @@
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
+
 namespace AdminPanelService.CustomAttribute;
 
 public class RequireAdminAttribute : Attribute, IAsyncActionFilter
@@ -10,7 +13,7 @@ public class RequireAdminAttribute : Attribute, IAsyncActionFilter
             await authorizationService.EnsureAdminAccessAsync();
             await next();
         }
-        catch (UnauthorizedAccessException ex)
+        catch (UnauthorizedAccessException)
         {
             context.Result = new ForbidResult();
         }

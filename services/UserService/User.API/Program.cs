@@ -4,13 +4,14 @@ using User.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var useInMemory = builder.Configuration.GetValue<bool>("InMemory");
 builder.Services.AddGrpc();
+
+var useInMemory = builder.Configuration.GetValue<bool>("InMemory");
 
 if (useInMemory)
 {
     builder.Services.AddDbContext<UserDbContext>(options =>
-        options.UseInMemoryDatabase("AuthDb"));
+        options.UseInMemoryDatabase("UserDb"));
 }
 else
 {
@@ -20,7 +21,6 @@ else
 }
 
 builder.Services.AddControllers();
-
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

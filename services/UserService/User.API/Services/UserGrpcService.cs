@@ -29,4 +29,84 @@ public class UserGrpcService(UserDbContext dbContext) : UserGrpc.UserGrpcBase
 
         return new CreateUserResponse { Success = true };
     }
+
+    public override async Task<GetRoleAndStatusResponse> GetRoleAndStatus(GetRoleAndStatusRequest request, ServerCallContext context)
+    {
+        if (!Guid.TryParse(request.UserId, out var userId))
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid UserId format"));
+        }
+
+        var user = await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+        return new GetRoleAndStatusResponse
+        {
+            Role = user.Role,
+            IsBlocked = user.IsBlocked
+        };
+    }
+
+
+    public override async Task<GetUserByIdResponse> GetUserById(GetUserByIdRequest request, ServerCallContext context)
+    {
+        if (!Guid.TryParse(request.Id, out var userId))
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID"));
+
+        var user = await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+        return new GetUserByIdResponse
+        {
+            Id = user.Id.ToString(),
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            Email = user.Email ?? "",
+            Role = user.Role,
+            IsBlocked = user.IsBlocked
+        };
+    }
+
+    public override async Task<Google.Protobuf.WellKnownTypes.Empty> BlockUser(BlockUserRequest request, ServerCallContext context)
+    {
+        if (!Guid.TryParse(request.Id, out var userId))
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID"));
+
+        var user = await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+        user.IsBlocked = true;
+        await _dbContext.SaveChangesAsync();
+
+        return new Google.Protobuf.WellKnownTypes.Empty();
+    }
+
+    public override async Task<Google.Protobuf.WellKnownTypes.Empty> UnblockUser(UnblockUserRequest request, ServerCallContext context)
+    {
+        if (!Guid.TryParse(request.Id, out var userId))
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID"));
+
+        var user = await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+        user.IsBlocked = false;
+        await _dbContext.SaveChangesAsync();
+
+        return new Google.Protobuf.WellKnownTypes.Empty();
+    }
+
+    public override async Task<Google.Protobuf.WellKnownTypes.Empty> ChangeUserRole(ChangeUserRoleRequest request, ServerCallContext context)
+    {
+        if (!Guid.TryParse(request.Id, out var userId))
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "Invalid user ID"));
+
+        var user = await _dbContext.UserProfiles.FirstOrDefaultAsync(u => u.Id == userId)
+            ?? throw new RpcException(new Status(StatusCode.NotFound, "User not found"));
+
+        user.Role = request.NewRole;
+        await _dbContext.SaveChangesAsync();
+
+        return new Google.Protobuf.WellKnownTypes.Empty();
+    }
+
 }

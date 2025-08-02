@@ -3,10 +3,8 @@ using User.API.Domain.Entities;
 
 namespace User.API.Data;
 
-public class UserDbContext : DbContext
+public class UserDbContext(DbContextOptions<UserDbContext> options) : DbContext(options)
 {
-    public UserDbContext(DbContextOptions<UserDbContext> options) : base(options) { }
-
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
