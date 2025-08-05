@@ -1,3 +1,4 @@
+using Contracts.Enums;
 using Restaurant.API.Domain.Entities;
 
 
@@ -9,4 +10,5 @@ public interface IRestaurantService
     Task<SupportedRestaurant?> UpdateRestaurantAsync(SupportedRestaurant restaurant);
     Task<bool> DeleteRestaurantAsync(Guid restaurantId);
     Task<IEnumerable<SupportedRestaurant>> GetAllRestaurantsAsync();
+    Task<IEnumerable<DishCategory>> GetRestaurantCategoriesAsync(Guid restaurantId);
 }

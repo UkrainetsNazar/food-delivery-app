@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+option csharp_namespace = "RestaurantService";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+
+service RestaurantService {
+  rpc CreateRestaurant (RestaurantRequest) returns (RestaurantResponse);
+  rpc UpdateRestaurant (RestaurantRequest) returns (RestaurantResponse);
+  rpc DeleteRestaurant (RestaurantIdRequest) returns (google.protobuf.BoolValue);
+  rpc GetAllRestaurants (google.protobuf.Empty) returns (RestaurantListResponse);
+  rpc GetRestaurantCategories (RestaurantIdRequest) returns (DishCategoryListResponse);
+}
+
+service DishService {
+  rpc CreateDish (DishRequest) returns (DishResponse);
+  rpc UpdateDish (DishRequest) returns (DishResponse);
+  rpc DeleteDish (DishIdRequest) returns (google.protobuf.BoolValue);
+  rpc GetDishById (DishIdRequest) returns (DishResponse);
+  rpc GetDishesByName (DishNameRequest) returns (DishListResponse);
+  rpc GetDishesByRestaurant (RestaurantIdRequest) returns (DishListResponse);
+}
+
+enum DishCategory {
+  UNKNOWN = 0;
+  PIZZA = 1;
+  BURGER = 2;
+  SUSHI = 3;
+  DRINKS = 4;
+  DESSERT = 5;
+}
+
+message RestaurantRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string address = 4;
+  string phone_number = 5;
+}
+
+message RestaurantResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  string address = 4;
+  string phone_number = 5;
+}
+
+message RestaurantListResponse {
+  repeated RestaurantResponse restaurants = 1;
+}
+
+message DishRequest {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  DishCategory category = 4;
+  string image_url = 5;
+  double price = 6;
+  string restaurant_id = 7;
+}
+
+message DishResponse {
+  string id = 1;
+  string name = 2;
+  string description = 3;
+  DishCategory category = 4;
+  string image_url = 5;
+  double price = 6;
+  string restaurant_id = 7;
+}
+
+message DishListResponse {
+  repeated DishResponse dishes = 1;
+}
+
+message RestaurantIdRequest {
+  string restaurant_id = 1;
+}
+
+message DishIdRequest {
+  string dish_id = 1;
+}
+
+message DishNameRequest {
+  string name = 1;
+}
+
+message DishCategoryListResponse {
+  repeated DishCategory categories = 1;
+}

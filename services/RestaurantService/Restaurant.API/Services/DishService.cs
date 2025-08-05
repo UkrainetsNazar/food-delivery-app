@@ -34,16 +34,6 @@ public class DishService(RestaurantDbContext context) : IDishService
         return dishes;
     }
 
-    public async Task<IEnumerable<Dish>> GetDishesByRestaurantAndCategoryAsync(Guid restaurantId, Guid categoryId)
-    {
-        var dishes = await _context.Dishes
-        .AsNoTracking()
-        .Where(d => d.RestaurantId == restaurantId && d.DishCategoryId == categoryId)
-        .ToListAsync();
-
-        return dishes;
-    }
-
     public async Task<Dish?> UpdateDishAsync(Dish dish)
     {
         var existingDish = await _context.Dishes.FindAsync(dish.Id);
@@ -52,5 +42,18 @@ public class DishService(RestaurantDbContext context) : IDishService
         _context.Entry(existingDish).CurrentValues.SetValues(dish);
         await _context.SaveChangesAsync();
         return existingDish;
+    }
+
+    public async Task<Dish?> GetDishByIdAsync(Guid dishId)
+    {
+        return await _context.Dishes.AsNoTracking().FirstOrDefaultAsync(d => d.Id == dishId);
+    }
+
+    public async Task<IEnumerable<Dish>> GetDishesByRestaurantAsync(Guid restaurantId)
+    {
+        return await _context.Dishes
+            .AsNoTracking()
+            .Where(d => d.RestaurantId == restaurantId)
+            .ToListAsync();
     }
 }

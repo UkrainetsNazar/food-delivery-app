@@ -7,7 +7,6 @@ import "google/protobuf/empty.proto";
 service UserGrpc {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
   rpc GetRoleAndStatus (GetRoleAndStatusRequest) returns (GetRoleAndStatusResponse);
-
   rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse);
   rpc BlockUser (BlockUserRequest) returns (google.protobuf.Empty);
   rpc UnblockUser (UnblockUserRequest) returns (google.protobuf.Empty);

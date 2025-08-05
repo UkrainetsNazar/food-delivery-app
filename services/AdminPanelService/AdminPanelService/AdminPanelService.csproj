@@ -12,8 +12,8 @@
 
   <ItemGroup>
     <Protobuf Include="..\..\Shared\Contracts\Protos\user.proto" GrpcServices="Client" />
+    <Protobuf Include="..\..\Shared\Contracts\Protos\restaurant.proto" GrpcServices="Client" />
   </ItemGroup>
-
 
   <ItemGroup>
     <PackageReference Include="Google.Protobuf" Version="3.31.1" />

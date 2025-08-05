@@ -1,3 +1,4 @@
+using Contracts.Enums;
 using Microsoft.EntityFrameworkCore;
 using Restaurant.API.Data;
 using Restaurant.API.Domain.Entities;
@@ -40,5 +41,15 @@ public class RestaurantService(RestaurantDbContext context) : IRestaurantService
     public async Task<IEnumerable<SupportedRestaurant>> GetAllRestaurantsAsync()
     {
         return await _context.Restaurants.AsNoTracking().ToListAsync();
+    }
+
+    public async Task<IEnumerable<DishCategory>> GetRestaurantCategoriesAsync(Guid restaurantId)
+    {
+        return await _context.Dishes
+            .AsNoTracking()
+            .Where(d => d.RestaurantId == restaurantId)
+            .Select(d => d.Category)
+            .Distinct()
+            .ToListAsync();
     }
 }

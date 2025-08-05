@@ -1,8 +1,8 @@
 using AdminPanelService.Interfaces;
 
-namespace AdminPanelService.Services;
+namespace AdminPanelService.Clients;
 
-public class AuthorizationService(IUserGrpcClient userClient, IHttpContextAccessor accessor) : IAuthorizationService
+public class AuthorizationClient(IUserGrpcClient userClient, IHttpContextAccessor accessor) : IAuthorizationClient
 {
     private readonly IUserGrpcClient _userClient = userClient;
     private readonly IHttpContextAccessor _httpContextAccessor = accessor;

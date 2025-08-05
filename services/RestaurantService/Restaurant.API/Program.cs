@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Restaurant.API.Data;
+using Restaurant.API.Interfaces;
+using Restaurant.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +18,9 @@ else
     builder.Services.AddDbContext<RestaurantDbContext>(options =>
         options.UseNpgsql(connectionString));
 }
+
+builder.Services.AddScoped<IDishService, DishService>();
+builder.Services.AddScoped<IRestaurantService, RestaurantService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
