@@ -1,136 +1,219 @@
 using System.Security.Cryptography;
 using System.Text;
 using Auth.API.Data;
-using Auth.API.Domain;
 using Auth.API.Domain.DTO;
 using Auth.API.Domain.Entities;
 using Grpc.Core;
 using Microsoft.EntityFrameworkCore;
-using UserService;
+using UserGrpcService;
 
 namespace Auth.API.Services;
 
-public class AuthService(AuthDbContext context, JwtService jwtService, UserGrpc.UserGrpcClient userClient)
+public class AuthService(
+    AuthDbContext context,
+    JwtService jwtService,
+    UserService.UserServiceClient userClient,
+    ILogger<AuthService> logger)
 {
     private readonly AuthDbContext _context = context;
     private readonly JwtService _jwtService = jwtService;
-    private readonly UserGrpc.UserGrpcClient _userClient = userClient;
+    private readonly UserService.UserServiceClient _userClient = userClient;
+    private readonly ILogger<AuthService> _logger = logger;
 
     public async Task<(string AccessToken, string RefreshToken)?> LoginAsync(string email, string password)
     {
-        var user = await _context.AppUsers.Include(u => u.RefreshTokens).FirstOrDefaultAsync(u => u.Email == email);
-        if (user == null || !VerifyPassword(password, user.PasswordHash!, user.PasswordSalt!))
-            return null;
-
-        var grpcResponse = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
+        try
         {
-            UserId = user.Id.ToString()
-        });
+            var user = await _context.AppUsers
+                .Include(u => u.RefreshTokens)
+                .FirstOrDefaultAsync(u => u.Email == email);
+            
+            if (user == null || !VerifyPassword(password, user.PasswordHash!, user.PasswordSalt!))
+            {
+                _logger.LogWarning("Login failed for email: {Email}", email);
+                return null;
+            }
 
-        if (grpcResponse.IsBlocked)
-            return null;
+            var grpcResponse = await _userClient.GetRoleAndStatusAsync(
+                new GetRoleAndStatusRequest { UserId = user.Id.ToString() },
+                deadline: DateTime.UtcNow.AddSeconds(5));
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, grpcResponse.Role);
-        var refreshToken = GenerateRefreshToken();
+            if (grpcResponse.IsBlocked)
+            {
+                _logger.LogWarning("Login attempt for blocked user: {UserId}", user.Id);
+                return null;
+            }
 
-        user.RefreshTokens.Add(refreshToken);
-        await _context.SaveChangesAsync();
+            var accessToken = _jwtService.GenerateToken(user.Id, user.Email, grpcResponse.Role);
+            var refreshToken = GenerateRefreshToken();
 
-        return (accessToken, refreshToken.Token);
+            user.RefreshTokens.Add(refreshToken);
+            await _context.SaveChangesAsync();
+
+            return (accessToken, refreshToken.Token);
+        }
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.DeadlineExceeded)
+        {
+            _logger.LogError(ex, "Timeout while checking user status for email: {Email}", email);
+            throw new ApplicationException("Service unavailable");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during login for email: {Email}", email);
+            throw;
+        }
     }
 
     public async Task<(string AccessToken, string RefreshToken)?> RefreshTokenAsync(string token)
     {
-        var refreshToken = await _context.RefreshTokens
-            .Include(r => r.AppUser)
-            .FirstOrDefaultAsync(r => r.Token == token);
-
-        if (refreshToken == null || !refreshToken.IsActive)
-            return null;
-
-        var user = refreshToken.AppUser;
-
-        var response = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
+        try
         {
-            UserId = user.Id.ToString()
-        });
+            var refreshToken = await _context.RefreshTokens
+                .Include(r => r.AppUser)
+                .FirstOrDefaultAsync(r => r.Token == token);
 
-        if (response.IsBlocked)
-            return null;
+            if (refreshToken == null || !refreshToken.IsActive)
+            {
+                _logger.LogWarning("Invalid refresh token attempt");
+                return null;
+            }
 
-        user.RefreshTokens.Where(t => t.IsActive).ToList().ForEach(t => t.Revoked = DateTime.UtcNow);
+            var user = refreshToken.AppUser;
 
-        var newRefreshToken = GenerateRefreshToken();
-        refreshToken.Revoked = DateTime.UtcNow;
-        user.RefreshTokens.Add(newRefreshToken);
+            var response = await _userClient.GetRoleAndStatusAsync(
+                new GetRoleAndStatusRequest { UserId = user.Id.ToString() },
+                deadline: DateTime.UtcNow.AddSeconds(5));
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, response.Role);
-        await _context.SaveChangesAsync();
+            if (response.IsBlocked)
+            {
+                _logger.LogWarning("Refresh token attempt for blocked user: {UserId}", user.Id);
+                return null;
+            }
 
-        return (accessToken, newRefreshToken.Token);
+            var activeTokens = await _context.RefreshTokens
+                .Where(t => t.AppUserId == user.Id && t.IsActive)
+                .ToListAsync();
+
+            foreach (var activeToken in activeTokens)
+            {
+                activeToken.Revoked = DateTime.UtcNow;
+            }
+
+            var newRefreshToken = GenerateRefreshToken();
+            user.RefreshTokens.Add(newRefreshToken);
+
+            var accessToken = _jwtService.GenerateToken(user.Id, user.Email, response.Role);
+            
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return (accessToken, newRefreshToken.Token);
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error during token refresh");
+            throw;
+        }
     }
 
     public async Task<bool> RevokeTokenAsync(string token, Guid userId)
     {
-        var refreshToken = await _context.RefreshTokens
-            .FirstOrDefaultAsync(r => r.Token == token && r.AppUserId == userId);
+        try
+        {
+            var refreshToken = await _context.RefreshTokens
+                .FirstOrDefaultAsync(r => r.Token == token && r.AppUserId == userId);
 
-        if (refreshToken == null || !refreshToken.IsActive)
-            return false;
+            if (refreshToken == null || !refreshToken.IsActive)
+                return false;
 
-        refreshToken.Revoked = DateTime.UtcNow;
-        await _context.SaveChangesAsync();
-        return true;
+            refreshToken.Revoked = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+            
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error revoking token for user: {UserId}", userId);
+            throw;
+        }
     }
 
     public async Task<AuthResultDto?> RegisterAsync(RegisterDto registerDto)
     {
-        if (await _context.AppUsers.AnyAsync(u => u.Email == registerDto.Email))
-            return null;
-
-        CreatePasswordHash(registerDto.Password!, out byte[] hash, out byte[] salt);
-
-        var user = new AppUser
-        {
-            Email = registerDto.Email!,
-            PasswordHash = hash,
-            PasswordSalt = salt,
-            RefreshTokens = new List<RefreshToken>()
-        };
-
-        var refreshToken = GenerateRefreshToken();
-        user.RefreshTokens.Add(refreshToken);
-
-        _context.AppUsers.Add(user);
-        await _context.SaveChangesAsync();
-
-        var grpcRequest = new CreateUserRequest
-        {
-            UserId = user.Id.ToString(),
-            FirstName = registerDto.FirstName,
-            LastName = registerDto.LastName
-        };
-
+        using var transaction = await _context.Database.BeginTransactionAsync();
+        
         try
         {
-            var grpcResponse = await _userClient.CreateUserAsync(grpcRequest);
-            if (!grpcResponse.Success)
-                Console.WriteLine("UserService failed to create user");
-        }
-        catch (RpcException ex)
-        {
-            Console.WriteLine($"gRPC error while creating user profile: {ex.Status.Detail}");
-        }
+            if (await _context.AppUsers.AnyAsync(u => u.Email == registerDto.Email))
+            {
+                _logger.LogWarning("Registration attempt with existing email: {Email}", registerDto.Email);
+                return null;
+            }
 
-        var roleResponse = await _userClient.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
-        {
-            UserId = user.Id.ToString()
-        });
+            CreatePasswordHash(registerDto.Password!, out byte[] hash, out byte[] salt);
 
-        var accessToken = _jwtService.GenerateToken(user.Id, user.Email, roleResponse.Role);
-        return new AuthResultDto { AccessToken = accessToken, RefreshToken = refreshToken.Token };
+            var user = new AppUser
+            {
+                Email = registerDto.Email!,
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                RefreshTokens = new List<RefreshToken>()
+            };
+
+            var refreshToken = GenerateRefreshToken();
+            user.RefreshTokens.Add(refreshToken);
+
+            _context.AppUsers.Add(user);
+            await _context.SaveChangesAsync();
+
+            try
+            {
+                var grpcResponse = await _userClient.CreateUserAsync(
+                    new CreateUserRequest
+                    {
+                        UserId = user.Id.ToString(),
+                        FirstName = registerDto.FirstName,
+                        LastName = registerDto.LastName,
+                        Email = registerDto.Email
+                    },
+                    deadline: DateTime.UtcNow.AddSeconds(5));
+
+                if (!grpcResponse.Success)
+                {
+                    _logger.LogError("Failed to create user profile in UserService for: {Email}", registerDto.Email);
+                }
+            }
+            catch (RpcException ex)
+            {
+                _logger.LogError(ex, "gRPC error while creating user profile for: {Email}", registerDto.Email);
+                await transaction.RollbackAsync();
+                throw new ApplicationException("Failed to create user profile");
+            }
+
+            var roleResponse = await _userClient.GetRoleAndStatusAsync(
+                new GetRoleAndStatusRequest { UserId = user.Id.ToString() },
+                deadline: DateTime.UtcNow.AddSeconds(5));
+
+            var accessToken = _jwtService.GenerateToken(user.Id, user.Email, roleResponse.Role);
+            
+            await transaction.CommitAsync();
+            
+            return new AuthResultDto 
+            { 
+                AccessToken = accessToken, 
+                RefreshToken = refreshToken.Token 
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger.LogError(ex, "Error during registration for email: {Email}", registerDto.Email);
+            throw;
+        }
     }
-
 
     private void CreatePasswordHash(string password, out byte[] hash, out byte[] salt)
     {

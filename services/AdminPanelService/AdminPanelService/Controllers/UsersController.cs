@@ -1,5 +1,5 @@
+using AdminPanelService.Clients;
 using AdminPanelService.CustomAttribute;
-using AdminPanelService.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AdminPanelService.Controllers;
@@ -7,9 +7,9 @@ namespace AdminPanelService.Controllers;
 [ApiController]
 [Route("users")]
 [RequireAdmin]
-public class UsersController(IUserGrpcClient userClient) : ControllerBase
+public class UsersController(UserManagementClient userClient) : ControllerBase
 {
-    private readonly IUserGrpcClient _userClient = userClient;
+    private readonly UserManagementClient _userClient = userClient;
 
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(Guid id)

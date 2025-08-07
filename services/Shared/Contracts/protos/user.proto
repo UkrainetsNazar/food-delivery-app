@@ -1,10 +1,10 @@
 syntax = "proto3";
 
-option csharp_namespace = "UserService";
+option csharp_namespace = "UserGrpcService";
 
 import "google/protobuf/empty.proto";
 
-service UserGrpc {
+service UserService {
   rpc CreateUser (CreateUserRequest) returns (CreateUserResponse);
   rpc GetRoleAndStatus (GetRoleAndStatusRequest) returns (GetRoleAndStatusResponse);
   rpc GetUserById (GetUserByIdRequest) returns (GetUserByIdResponse);
@@ -17,6 +17,7 @@ message CreateUserRequest {
   string userId = 1;
   string firstName = 2;
   string lastName = 3;
+  string email = 4;
 }
 
 message CreateUserResponse {

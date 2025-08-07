@@ -1,10 +1,11 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Auth.API.Domain;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Auth.API.Domain;
+namespace Auth.API.Services;
 
 public class JwtService(IOptions<JwtOptions> options)
 {

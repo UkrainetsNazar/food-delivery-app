@@ -4,8 +4,6 @@ using User.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddGrpc();
-
 var useInMemory = builder.Configuration.GetValue<bool>("InMemory");
 
 if (useInMemory)
@@ -17,10 +15,17 @@ else
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<UserDbContext>(options =>
-        options.UseNpgsql(connectionString));
+        options.UseNpgsql(connectionString,
+            npgOptions => npgOptions.EnableRetryOnFailure()));
 }
 
-builder.Services.AddControllers();
+builder.Services.AddGrpc(options =>
+{
+    options.EnableDetailedErrors = builder.Environment.IsDevelopment();
+    options.MaxReceiveMessageSize = 2 * 1024 * 1024;
+    options.MaxSendMessageSize = 2 * 1024 * 1024;
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -32,7 +37,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.MapGrpcService<UserGrpcService>();
+app.MapGet("/", () => "User Service is running!");
+
+app.MapGrpcService<UserService>();
 app.MapControllers();
+
+if (!useInMemory)
+{
+    using var scope = app.Services.CreateScope();
+    var dbContext = scope.ServiceProvider.GetRequiredService<UserDbContext>();
+    await dbContext.Database.MigrateAsync();
+}
 
 app.Run();

@@ -1,12 +1,11 @@
-using AdminPanelService.Interfaces;
 using Contracts.DTO;
-using UserService;
+using UserGrpcService;
 
-namespace AdminPanelService.GrpcClients;
+namespace AdminPanelService.Clients;
 
-public class UserGrpcClient(UserGrpc.UserGrpcClient client) : IUserGrpcClient
+public class UserManagementClient(UserService.UserServiceClient client)
 {
-    private readonly UserGrpc.UserGrpcClient _client = client;
+    private readonly UserService.UserServiceClient _client = client;
 
     public async Task<UserDto> GetUserByIdAsync(Guid userId)
     {
@@ -41,7 +40,7 @@ public class UserGrpcClient(UserGrpc.UserGrpcClient client) : IUserGrpcClient
         });
     }
 
-    public async Task<(string role, bool isBlocked)> GetRoleAndStatus(Guid userId)
+    public async Task<(string role, bool isBlocked)> GetRoleAndStatusAsync(Guid userId)
     {
         var response = await _client.GetRoleAndStatusAsync(new GetRoleAndStatusRequest
         {

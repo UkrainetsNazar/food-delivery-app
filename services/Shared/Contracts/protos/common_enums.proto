@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package common;
+
+enum DishCategory {
+  UNKNOWN = 0;
+  PIZZA = 1;
+  BURGER = 2;
+  SUSHI = 3;
+  DRINKS = 4;
+  DESSERT = 5;
+}

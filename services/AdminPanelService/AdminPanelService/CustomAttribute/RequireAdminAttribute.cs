@@ -1,4 +1,4 @@
-using AdminPanelService.Interfaces;
+using AdminPanelService.Clients;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
@@ -8,7 +8,7 @@ public class RequireAdminAttribute : Attribute, IAsyncActionFilter
 {
     public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
     {
-        var authorizationService = context.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+        var authorizationService = context.HttpContext.RequestServices.GetRequiredService<AuthorizationClient>();
         try
         {
             await authorizationService.EnsureAdminAccessAsync();

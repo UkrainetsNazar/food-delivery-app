@@ -1,9 +1,12 @@
 syntax = "proto3";
 
-option csharp_namespace = "RestaurantService";
+package restaurant;
+
+option csharp_namespace = "RestaurantGrpcService";
 
 import "google/protobuf/empty.proto";
 import "google/protobuf/wrappers.proto";
+import "common_enums.proto";
 
 service RestaurantService {
   rpc CreateRestaurant (RestaurantRequest) returns (RestaurantResponse);
@@ -20,15 +23,6 @@ service DishService {
   rpc GetDishById (DishIdRequest) returns (DishResponse);
   rpc GetDishesByName (DishNameRequest) returns (DishListResponse);
   rpc GetDishesByRestaurant (RestaurantIdRequest) returns (DishListResponse);
-}
-
-enum DishCategory {
-  UNKNOWN = 0;
-  PIZZA = 1;
-  BURGER = 2;
-  SUSHI = 3;
-  DRINKS = 4;
-  DESSERT = 5;
 }
 
 message RestaurantRequest {
@@ -55,7 +49,7 @@ message DishRequest {
   string id = 1;
   string name = 2;
   string description = 3;
-  DishCategory category = 4;
+  common.DishCategory category = 4;
   string image_url = 5;
   double price = 6;
   string restaurant_id = 7;
@@ -65,7 +59,7 @@ message DishResponse {
   string id = 1;
   string name = 2;
   string description = 3;
-  DishCategory category = 4;
+  common.DishCategory category = 4;
   string image_url = 5;
   double price = 6;
   string restaurant_id = 7;
@@ -88,5 +82,5 @@ message DishNameRequest {
 }
 
 message DishCategoryListResponse {
-  repeated DishCategory categories = 1;
+  repeated common.DishCategory categories = 1;
 }
