@@ -40,7 +40,7 @@ public class RestaurantManagementClient(
             var response = await _restaurantClient.UpdateRestaurantAsync(request);
             return _mapper.Map<RestaurantDto>(response);
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
             return null;
         }
@@ -51,11 +51,11 @@ public class RestaurantManagementClient(
         }
     }
 
-    public async Task<bool> DeleteRestaurantAsync(Guid restaurantId)
+    public async Task<bool> DeleteRestaurantAsync(string restaurantId)
     {
         try
         {
-            var request = new RestaurantIdRequest { RestaurantId = restaurantId.ToString() };
+            var request = new RestaurantIdRequest { RestaurantId = restaurantId };
             var response = await _restaurantClient.DeleteRestaurantAsync(request);
             return response.Value;
         }
@@ -80,11 +80,11 @@ public class RestaurantManagementClient(
         }
     }
 
-    public async Task<IEnumerable<DishCategory>> GetRestaurantCategoriesAsync(Guid restaurantId)
+    public async Task<IEnumerable<DishCategory>> GetRestaurantCategoriesAsync(string restaurantId)
     {
         try
         {
-            var request = new RestaurantIdRequest { RestaurantId = restaurantId.ToString() };
+            var request = new RestaurantIdRequest { RestaurantId = restaurantId };
             var response = await _restaurantClient.GetRestaurantCategoriesAsync(request);
             return _mapper.Map<IEnumerable<DishCategory>>(response.Categories);
         }
@@ -118,7 +118,7 @@ public class RestaurantManagementClient(
             var response = await _dishClient.UpdateDishAsync(request);
             return _mapper.Map<DishDto>(response);
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
             return null;
         }
@@ -129,11 +129,11 @@ public class RestaurantManagementClient(
         }
     }
 
-    public async Task<bool> DeleteDishAsync(Guid dishId)
+    public async Task<bool> DeleteDishAsync(string dishId)
     {
         try
         {
-            var request = new DishIdRequest { DishId = dishId.ToString() };
+            var request = new DishIdRequest { DishId = dishId };
             var response = await _dishClient.DeleteDishAsync(request);
             return response.Value;
         }
@@ -144,15 +144,15 @@ public class RestaurantManagementClient(
         }
     }
 
-    public async Task<DishDto?> GetDishByIdAsync(Guid dishId)
+    public async Task<DishDto?> GetDishByIdAsync(string dishId)
     {
         try
         {
-            var request = new DishIdRequest { DishId = dishId.ToString() };
+            var request = new DishIdRequest { DishId = dishId };
             var response = await _dishClient.GetDishByIdAsync(request);
             return _mapper.Map<DishDto>(response);
         }
-        catch (RpcException ex) when (ex.StatusCode == Grpc.Core.StatusCode.NotFound)
+        catch (RpcException ex) when (ex.StatusCode == StatusCode.NotFound)
         {
             return null;
         }
@@ -178,11 +178,11 @@ public class RestaurantManagementClient(
         }
     }
 
-    public async Task<IEnumerable<DishDto>> GetDishesByRestaurantAsync(Guid restaurantId)
+    public async Task<IEnumerable<DishDto>> GetDishesByRestaurantAsync(string restaurantId)
     {
         try
         {
-            var request = new RestaurantIdRequest { RestaurantId = restaurantId.ToString() };
+            var request = new RestaurantIdRequest { RestaurantId = restaurantId };
             var response = await _dishClient.GetDishesByRestaurantAsync(request);
             return _mapper.Map<IEnumerable<DishDto>>(response.Dishes);
         }

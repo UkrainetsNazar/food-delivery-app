@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminPanelService.Controllers;
 
 [ApiController]
-[Route("users")]
+[Route("admin/users")]
 [RequireAdmin]
 public class UsersController(UserManagementClient userClient) : ControllerBase
 {

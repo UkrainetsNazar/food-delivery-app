@@ -10,7 +10,7 @@ public class RestaurantManagementProfile : Profile
     {
         CreateMap<RestaurantRequest, RestaurantDto>().ReverseMap();
         CreateMap<RestaurantResponse, RestaurantDto>().ReverseMap();
-        
+
         CreateMap<DishRequest, DishDto>().ReverseMap();
         CreateMap<DishResponse, DishDto>().ReverseMap();
     }
