@@ -6,13 +6,13 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminPanelService.Controllers;
 
 [ApiController]
-[Route("admin/dishes")]
+[Route("dishes")]
 [RequireAdmin]
 public class DishController(RestaurantManagementClient restaurantClient) : ControllerBase
 {
     private readonly RestaurantManagementClient _restaurantClient = restaurantClient;
 
-    [HttpPost("{restaurantId}/dishes")]
+    [HttpPost("{restaurantId}")]
     public async Task<IActionResult> CreateDish(string restaurantId, [FromBody] DishDto dish)
     {
         dish.RestaurantId = restaurantId;
@@ -20,7 +20,7 @@ public class DishController(RestaurantManagementClient restaurantClient) : Contr
         return Ok(createdDish);
     }
 
-    [HttpPut("dishes/{id}")]
+    [HttpPut("{id}")]
     public async Task<IActionResult> UpdateDish(string id, [FromBody] DishDto dish)
     {
         dish.Id = id;
@@ -30,7 +30,7 @@ public class DishController(RestaurantManagementClient restaurantClient) : Contr
         return Ok(updated);
     }
 
-    [HttpDelete("dishes/{id}")]
+    [HttpDelete("{id}")]
     public async Task<IActionResult> DeleteDish(string id)
     {
         var success = await _restaurantClient.DeleteDishAsync(id);
@@ -39,7 +39,7 @@ public class DishController(RestaurantManagementClient restaurantClient) : Contr
         return NoContent();
     }
 
-    [HttpGet("dishes/{id}")]
+    [HttpGet("{id}")]
     public async Task<IActionResult> GetDishById(string id)
     {
         var dish = await _restaurantClient.GetDishByIdAsync(id);
@@ -48,14 +48,14 @@ public class DishController(RestaurantManagementClient restaurantClient) : Contr
         return Ok(dish);
     }
 
-    [HttpGet("dishes/search")]
+    [HttpGet("search")]
     public async Task<IActionResult> GetDishesByName([FromQuery] string name)
     {
         var dishes = await _restaurantClient.GetDishesByNameAsync(name);
         return Ok(dishes);
     }
 
-    [HttpGet("{restaurantId}/dishes")]
+    [HttpGet("{restaurantId}/list")]
     public async Task<IActionResult> GetDishesByRestaurant(string restaurantId)
     {
         var dishes = await _restaurantClient.GetDishesByRestaurantAsync(restaurantId);

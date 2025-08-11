@@ -16,7 +16,7 @@ builder.Services.AddGrpc(options =>
 
 builder.Services.AddGrpcClient<UserService.UserServiceClient>(o =>
 {
-    o.Address = new Uri(builder.Configuration["GrpcSettings:UserServiceUrl"]!);
+    o.Address = new Uri(builder.Configuration["UserServiceUrl"]!);
 })
 .ConfigurePrimaryHttpMessageHandler(() => 
 {
@@ -35,7 +35,7 @@ builder.Services.AddGrpcClient<UserService.UserServiceClient>(o =>
 
 builder.Services.AddGrpcClient<RestaurantService.RestaurantServiceClient>(o =>
 {
-    o.Address = new Uri(builder.Configuration["GrpcSettings:RestaurantServiceUrl"]!);
+    o.Address = new Uri(builder.Configuration["RestaurantServiceUrl"]!);
 });
 
 builder.Services.AddScoped<UserManagementClient>();

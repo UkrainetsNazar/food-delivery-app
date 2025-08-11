@@ -37,7 +37,7 @@ builder.Services.AddGrpc(options =>
 
 builder.Services.AddGrpcClient<UserService.UserServiceClient>(o =>
 {
-    o.Address = new Uri(builder.Configuration["UserService:Url"]!);
+    o.Address = new Uri(builder.Configuration["UserServiceUrl"]!);
 }).ConfigurePrimaryHttpMessageHandler(() => 
 {
     var handler = new HttpClientHandler
