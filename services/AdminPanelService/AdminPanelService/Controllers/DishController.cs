@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace AdminPanelService.Controllers;
 
 [ApiController]
-[Route("dishes")]
+[Route("admin/dishes")]
 [RequireAdmin]
 public class DishController(RestaurantManagementClient restaurantClient) : ControllerBase
 {

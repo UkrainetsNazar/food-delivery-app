@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Restaurant.API.Data;
-using Restaurant.API.Services;
+using Restaurant.API.grpcServices;
 
 var builder = WebApplication.CreateBuilder(args);
 
