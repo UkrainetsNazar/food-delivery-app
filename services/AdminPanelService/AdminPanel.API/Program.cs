@@ -98,7 +98,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/health", () => Results.Ok(new { Status = "Healthy" }));
+app.MapGet("/", () => "Admin Panel Service is running...");
 
 app.MapControllers();
 app.Run();
