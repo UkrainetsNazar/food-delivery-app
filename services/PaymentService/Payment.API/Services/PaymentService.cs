@@ -1,77 +1,71 @@
 namespace Payment.API.Services;
 
 using Grpc.Core;
-using Payment.API.Entities;
 using Payment.API.Interfaces;
 using PaymentGrpcService;
+using RabbitMQ.Client;
+using System.Text;
+using System.Text.Json;
 
-public class PaymentService(IPaymentRepository paymentRepository) : PaymentGrpcService.PaymentService.PaymentServiceBase
+public class PaymentService(IPaymentRepository repository, IConnection connection) 
+    : PaymentGrpcService.PaymentService.PaymentServiceBase
 {
-    private readonly IPaymentRepository _paymentRepository = paymentRepository;
+    private readonly IPaymentRepository _repository = repository;
+    private readonly IConnection _connection = connection;
 
-    public override async Task<PaymentResponse> CreatePayment(CreatePaymentRequest request, ServerCallContext context)
+    public override async Task<CreatePaymentResponse> CreatePayment(CreatePaymentRequest request, ServerCallContext context)
     {
-        var payment = new Payment
+        var payment = new Entities.Payment
         {
+            Id = Guid.NewGuid(),
             OrderId = Guid.Parse(request.OrderId),
-            UserId = Guid.Parse(request.UserId),
+            UserId = Guid.NewGuid(), // можеш додати в gRPC contract UserId
             Amount = (decimal)request.Amount,
-            Currency = request.Currency,
-            PaymentMethod = request.PaymentMethod,
             Status = "Pending",
             CreatedAt = DateTime.UtcNow
         };
 
-        await _paymentRepository.AddAsync(payment);
+        await _repository.AddAsync(payment);
 
-        return MapPayment(payment);
-    }
-
-    public override async Task<PaymentResponse> GetPaymentById(GetPaymentByIdRequest request, ServerCallContext context)
-    {
-        var payment = await _paymentRepository.GetByIdAsync(Guid.Parse(request.PaymentId))
-            ?? throw new RpcException(new Status(StatusCode.NotFound, "Payment not found"));
-
-        return MapPayment(payment);
-    }
-
-    public override async Task<PaymentsResponse> GetPaymentsByUser(GetPaymentsByUserRequest request, ServerCallContext context)
-    {
-        var payments = await _paymentRepository.GetByUserIdAsync(Guid.Parse(request.UserId));
-        var response = new PaymentsResponse();
-        response.Payments.AddRange(payments.Select(MapPayment));
-        return response;
-    }
-
-    public override async Task<PaymentsResponse> GetPaymentsByOrder(GetPaymentsByOrderRequest request, ServerCallContext context)
-    {
-        var payments = await _paymentRepository.GetByOrderIdAsync(Guid.Parse(request.OrderId));
-        var response = new PaymentsResponse();
-        response.Payments.AddRange(payments.Select(MapPayment));
-        return response;
-    }
-
-    public override async Task<PaymentResponse> UpdatePaymentStatus(UpdatePaymentStatusRequest request, ServerCallContext context)
-    {
-        var payment = await _paymentRepository.GetByIdAsync(Guid.Parse(request.PaymentId))
-            ?? throw new RpcException(new Status(StatusCode.NotFound, "Payment not found"));
-
-        payment.Status = request.Status;
-        await _paymentRepository.UpdateAsync(payment);
-
-        return MapPayment(payment);
-    }
-
-    private static PaymentResponse MapPayment(Payment payment) =>
-        new()
+        _ = Task.Run(async () =>
         {
-            Id = payment.Id.ToString(),
-            OrderId = payment.OrderId.ToString(),
-            UserId = payment.UserId.ToString(),
-            Amount = (double)payment.Amount,
-            Currency = payment.Currency ?? "",
-            PaymentMethod = payment.PaymentMethod ?? "",
-            Status = payment.Status ?? "",
-            CreatedAt = payment.CreatedAt.ToString("O")
+            await Task.Delay(2000);
+            var finalStatus = new Random().Next(2) == 0 ? "Succeeded" : "Failed";
+            payment.Status = finalStatus;
+            await _repository.UpdateAsync(payment);
+
+            PublishPaymentEvent(payment.Id.ToString(), payment.OrderId.ToString(), finalStatus);
+        });
+
+        return new CreatePaymentResponse
+        {
+            PaymentId = payment.Id.ToString(),
+            Status = payment.Status
         };
+    }
+
+    public override Task<GetPaymentStatusResponse> GetPaymentStatus(GetPaymentStatusRequest request, ServerCallContext context)
+    {
+        return Task.FromResult(new GetPaymentStatusResponse
+        {
+            PaymentId = request.PaymentId,
+            Status = "Succeeded"
+        });
+    }
+
+    private void PublishPaymentEvent(string paymentId, string orderId, string status)
+    {
+        using var channel = _connection.CreateModel();
+        channel.ExchangeDeclare("payments", ExchangeType.Fanout);
+
+        var evt = new
+        {
+            PaymentId = paymentId,
+            OrderId = orderId,
+            Status = status
+        };
+
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(evt));
+        channel.BasicPublish(exchange: "payments", routingKey: "", basicProperties: null, body: body);
+    }
 }

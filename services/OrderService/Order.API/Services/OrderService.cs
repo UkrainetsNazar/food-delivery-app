@@ -1,15 +1,23 @@
+using System.Text;
+using System.Text.Json;
+using Contracts.Events;
 using Grpc.Core;
 using Order.API.Entities;
 using Order.API.Interfaces;
 using OrderGrpcService;
+using RabbitMQ.Client;
 using RestaurantGrpcService;
 
 namespace Order.API.Services;
 
-public class OrderService(IOrderRepository orderRepository, DishService.DishServiceClient restaurantClient) : OrderGrpcService.OrderService.OrderServiceBase
+public class OrderService(
+    IOrderRepository orderRepository,
+    DishService.DishServiceClient restaurantClient,
+    IConnection rabbitConnection) : OrderGrpcService.OrderService.OrderServiceBase
 {
     private readonly IOrderRepository _orderRepository = orderRepository;
     private readonly DishService.DishServiceClient _restaurantClient = restaurantClient;
+    private readonly IConnection _rabbitConnection = rabbitConnection;
 
     public override async Task<OrderResponse> CreateOrder(CreateOrderRequest request, ServerCallContext context)
     {
@@ -22,10 +30,7 @@ public class OrderService(IOrderRepository orderRepository, DishService.DishServ
 
         foreach (var item in request.Items)
         {
-            var dish = await _restaurantClient.GetDishByIdAsync(new DishIdRequest
-            {
-                DishId = item.DishId
-            });
+            var dish = await _restaurantClient.GetDishByIdAsync(new DishIdRequest { DishId = item.DishId });
 
             order.Items.Add(new OrderItem
             {
@@ -38,6 +43,20 @@ public class OrderService(IOrderRepository orderRepository, DishService.DishServ
         }
 
         await _orderRepository.AddAsync(order);
+
+        // 🔹 Публікуємо подію в RabbitMQ
+        using var channel = _rabbitConnection.CreateModel();
+        channel.QueueDeclare("order_created", durable: true, exclusive: false, autoDelete: false);
+
+        var evt = new OrderCreatedEvent
+        {
+            OrderId = order.Id,
+            UserId = order.UserId,
+            TotalAmount = order.TotalPrice
+        };
+        var body = Encoding.UTF8.GetBytes(JsonSerializer.Serialize(evt));
+
+        channel.BasicPublish(exchange: "", routingKey: "order_created", basicProperties: null, body: body);
 
         return MapOrder(order);
     }
