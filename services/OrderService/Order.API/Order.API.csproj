@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\Shared\Contracts\Contracts.csproj" />
     <Protobuf Include="..\..\Shared\Contracts\Protos\restaurant.proto" GrpcServices="Client" />
     <Protobuf Include="..\..\Shared\Contracts\Protos\order.proto" GrpcServices="Server" />
+    <Protobuf Include="..\..\Shared\Contracts\Protos\common_enums.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>

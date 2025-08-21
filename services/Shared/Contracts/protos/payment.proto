@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option csharp_namespace = "PaymentGrpcService";
+
+package payment;
+
+service PaymentService {
+  rpc CreatePayment (CreatePaymentRequest) returns (PaymentResponse);
+  rpc GetPaymentById (GetPaymentByIdRequest) returns (PaymentResponse);
+  rpc GetPaymentsByUser (GetPaymentsByUserRequest) returns (PaymentsResponse);
+  rpc GetPaymentsByOrder (GetPaymentsByOrderRequest) returns (PaymentsResponse);
+  rpc UpdatePaymentStatus (UpdatePaymentStatusRequest) returns (PaymentResponse);
+}
+
+message CreatePaymentRequest {
+  string orderId = 1;
+  string userId = 2;
+  double amount = 3;
+  string currency = 4;
+  string paymentMethod = 5;
+}
+
+message GetPaymentByIdRequest {
+  string paymentId = 1;
+}
+
+message GetPaymentsByUserRequest {
+  string userId = 1;
+}
+
+message GetPaymentsByOrderRequest {
+  string orderId = 1;
+}
+
+message UpdatePaymentStatusRequest {
+  string paymentId = 1;
+  string status = 2;
+}
+
+message PaymentResponse {
+  string id = 1;
+  string orderId = 2;
+  string userId = 3;
+  double amount = 4;
+  string currency = 5;
+  string paymentMethod = 6;
+  string status = 7;
+  string createdAt = 8;
+}
+
+message PaymentsResponse {
+  repeated PaymentResponse payments = 1;
+}
